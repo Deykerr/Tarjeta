@@ -1,70 +1,467 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>¡Felices Fiestas y Próspero Año Nuevo!</title>
+    <title>Merry Christmas! 🎄✨</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700&family=Montserrat:wght@400;600&display=swap" rel="stylesheet">
     <style>
         * {
             box-sizing: border-box;
             margin: 0;
             padding: 0;
+            user-select: none;
         }
+
         body {
-            background-color: #141e18; /* Fondo oscuro elegante que resalta las luces */
+            background: radial-gradient(circle at center, #0f3827 0%, #05160f 100%);
+            min-height: 100vh;
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            min-height: 100vh;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            padding: 16px;
-            overflow-x: hidden;
-        }
-        .card-container {
-            max-width: 850px;
-            width: 100%;
-            border-radius: 16px;
+            font-family: 'Montserrat', sans-serif;
             overflow: hidden;
-            box-shadow: 0 12px 35px rgba(0, 0, 0, 0.6);
-            animation: aparecer 1.2s ease-out;
-            border: 2px solid #d4af37; /* Borde dorado sutil */
+            position: relative;
+            padding: 16px;
         }
+
+        /* Lienzo de nieve y partículas */
+        #snowCanvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        /* Pantalla inicial: Sobre Navideño */
+        #envelope-screen {
+            position: relative;
+            z-index: 10;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            transition: opacity 0.8s ease, transform 0.8s ease;
+        }
+
+        .envelope-wrapper {
+            width: 300px;
+            height: 200px;
+            background: linear-gradient(145deg, #134631, #0a291c);
+            border: 2px solid #d4af37;
+            border-radius: 12px;
+            position: relative;
+            cursor: pointer;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.7), 0 0 25px rgba(212, 175, 55, 0.25);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            transition: transform 0.3s ease;
+        }
+
+        .envelope-wrapper:hover {
+            transform: scale(1.04);
+        }
+
+        /* Solapa del sobre */
+        .envelope-flap {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 0;
+            height: 0;
+            border-left: 148px solid transparent;
+            border-right: 148px solid transparent;
+            border-top: 110px solid #1b5e42;
+            filter: drop-shadow(0 4px 6px rgba(0,0,0,0.4));
+            transform-origin: top;
+            transition: transform 0.7s ease;
+            z-index: 2;
+        }
+
+        .envelope-wrapper.open .envelope-flap {
+            transform: rotateX(180deg);
+        }
+
+        /* Sello de cera dorado */
+        .wax-seal {
+            width: 68px;
+            height: 68px;
+            background: radial-gradient(circle at 30% 30%, #f5d77f, #c59b27, #8a6608);
+            border-radius: 50%;
+            z-index: 3;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 28px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.6), inset 0 0 8px rgba(255,255,255,0.6);
+            animation: pulseSeal 2s infinite;
+            border: 2px solid #fff3c4;
+        }
+
+        @keyframes pulseSeal {
+            0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(212, 175, 55, 0.7); }
+            70% { transform: scale(1.08); box-shadow: 0 0 0 18px rgba(212, 175, 55, 0); }
+            100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(212, 175, 55, 0); }
+        }
+
+        .tap-hint {
+            margin-top: 22px;
+            color: #f3d98b;
+            font-family: 'Cinzel Decorative', cursive;
+            font-size: 1.1rem;
+            letter-spacing: 1.5px;
+            text-shadow: 0 2px 10px rgba(0,0,0,0.8);
+            animation: floatText 2.5s ease-in-out infinite;
+        }
+
+        @keyframes floatText {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-6px); }
+        }
+
+        /* Contenedor Principal de la Tarjeta */
+        #card-screen {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            z-index: 10;
+            width: 100%;
+            max-width: 880px;
+            opacity: 0;
+            transform: scale(0.85) translateY(30px);
+            transition: opacity 1s ease, transform 1s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        #card-screen.visible {
+            display: flex;
+            opacity: 1;
+            transform: scale(1) translateY(0);
+        }
+
+        .card-3d-wrapper {
+            perspective: 1200px;
+            width: 100%;
+        }
+
+        .card-container {
+            position: relative;
+            width: 100%;
+            border-radius: 18px;
+            overflow: hidden;
+            border: 3px solid #d4af37;
+            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.85), 0 0 35px rgba(212, 175, 55, 0.35);
+            transform-style: preserve-3d;
+            transition: transform 0.15s ease-out;
+            background: #0a291c;
+        }
+
+        /* Destello de luz que cruza la tarjeta */
+        .card-glare {
+            position: absolute;
+            top: 0;
+            left: -150%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(
+                115deg,
+                transparent 20%,
+                rgba(255, 245, 200, 0.25) 50%,
+                transparent 80%
+            );
+            transform: skewX(-20deg);
+            animation: shineSweep 6s infinite;
+            pointer-events: none;
+        }
+
+        @keyframes shineSweep {
+            0% { left: -150%; }
+            25% { left: 150%; }
+            100% { left: 150%; }
+        }
+
         img {
             width: 100%;
             height: auto;
             display: block;
         }
-        .btn-descargar {
-            margin-top: 20px;
+
+        /* Botones inferiores */
+        .actions {
+            margin-top: 22px;
+            display: flex;
+            gap: 14px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .btn {
             padding: 12px 24px;
-            background-color: #d4af37;
-            color: #141e18;
+            border-radius: 50px;
+            font-weight: 600;
+            font-size: 0.95rem;
             text-decoration: none;
-            font-weight: bold;
-            border-radius: 30px;
-            box-shadow: 0 4px 15px rgba(212, 175, 55, 0.4);
-            transition: transform 0.2s, background-color 0.2s;
+            cursor: pointer;
+            border: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.25s ease;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.4);
         }
-        .btn-descargar:hover {
-            transform: scale(1.05);
-            background-color: #e5c158;
+
+        .btn-gold {
+            background: linear-gradient(135deg, #f3d57b 0%, #c89d28 100%);
+            color: #0b2419;
         }
-        @keyframes aparecer {
-            from { opacity: 0; transform: translateY(20px) scale(0.97); }
-            to { opacity: 1; transform: translateY(0) scale(1); }
+
+        .btn-gold:hover {
+            transform: translateY(-3px) scale(1.03);
+            box-shadow: 0 10px 25px rgba(212, 175, 55, 0.5);
+        }
+
+        .btn-outline {
+            background: rgba(15, 56, 39, 0.8);
+            color: #f3d57b;
+            border: 1.5px solid #d4af37;
+            backdrop-filter: blur(6px);
+        }
+
+        .btn-outline:hover {
+            background: rgba(212, 175, 55, 0.2);
+            transform: translateY(-3px);
+        }
+
+        /* Control de música flotante */
+        .music-toggle {
+            position: fixed;
+            top: 16px;
+            right: 16px;
+            z-index: 20;
+            background: rgba(10, 41, 28, 0.75);
+            border: 1px solid #d4af37;
+            color: #f3d57b;
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
+            display: none;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            font-size: 18px;
+            backdrop-filter: blur(4px);
         }
     </style>
 </head>
 <body>
 
-    <div class="card-container">
-        <img src="tarjeta.jpg" alt="Tarjeta de felicitación de Año Nuevo y Navidad">
+    <canvas id="snowCanvas"></canvas>
+
+    <button id="musicBtn" class="music-toggle" title="Toggle Music">🎵</button>
+
+    <!-- Pantalla 1: Sobre cerrado -->
+    <div id="envelope-screen">
+        <div class="envelope-wrapper" id="envelope" onclick="openCard()">
+            <div class="envelope-flap"></div>
+            <div class="wax-seal">🎄</div>
+        </div>
+        <p class="tap-hint">Tap to open your Christmas card ✨</p>
     </div>
 
-    <a href="tarjeta.jpg" download="Felicitaciones_2027.jpg" class="btn-descargar">
-        Descargar Tarjeta
-    </a>
+    <!-- Pantalla 2: Tarjeta revelada -->
+    <div id="card-screen">
+        <div class="card-3d-wrapper">
+            <div class="card-container" id="card3d">
+                <img src="tarjeta.jpg" alt="Merry Christmas Card">
+                <div class="card-glare"></div>
+            </div>
+        </div>
 
+        <div class="actions">
+            <button class="btn btn-outline" onclick="burstSparkles()">✨ Celebrate</button>
+            <a href="tarjeta.jpg" download="Merry_Christmas_Card.jpg" class="btn btn-gold">⬇ Download Card</a>
+        </div>
+    </div>
+
+    <script>
+        // --- 1. SISTEMA DE NIEVE Y DESTELLOS EN CANVAS ---
+        const canvas = document.getElementById('snowCanvas');
+        const ctx = canvas.getContext('2d');
+        let width = canvas.width = window.innerWidth;
+        let height = canvas.height = window.innerHeight;
+
+        window.addEventListener('resize', () => {
+            width = canvas.width = window.innerWidth;
+            height = canvas.height = window.innerHeight;
+        });
+
+        const snowflakes = Array.from({ length: 85 }, () => ({
+            x: Math.random() * width,
+            y: Math.random() * height,
+            r: Math.random() * 3.2 + 1,
+            speedY: Math.random() * 1.2 + 0.4,
+            speedX: (Math.random() - 0.5) * 0.6,
+            opacity: Math.random() * 0.7 + 0.3
+        }));
+
+        let sparkles = [];
+
+        function burstSparkles() {
+            const colors = ['#ffd700', '#ff4d4d', '#ffffff', '#ffec8b', '#2ecc71'];
+            for (let i = 0; i < 90; i++) {
+                const angle = Math.random() * Math.PI * 2;
+                const velocity = Math.random() * 7 + 2;
+                sparkles.push({
+                    x: width / 2,
+                    y: height / 2,
+                    vx: Math.cos(angle) * velocity,
+                    vy: Math.sin(angle) * velocity - 2,
+                    size: Math.random() * 4 + 2,
+                    color: colors[Math.floor(Math.random() * colors.length)],
+                    alpha: 1,
+                    decay: Math.random() * 0.015 + 0.01
+                });
+            }
+        }
+
+        function animateCanvas() {
+            ctx.clearRect(0, 0, width, height);
+
+            // Dibujar nieve
+            snowflakes.forEach(f => {
+                ctx.beginPath();
+                ctx.arc(f.x, f.y, f.r, 0, Math.PI * 2);
+                ctx.fillStyle = `rgba(255, 255, 255, ${f.opacity})`;
+                ctx.fill();
+
+                f.y += f.speedY;
+                f.x += f.speedX;
+
+                if (f.y > height) { f.y = -5; f.x = Math.random() * width; }
+                if (f.x > width) f.x = 0;
+                if (f.x < 0) f.x = width;
+            });
+
+            // Dibujar destellos festivos
+            sparkles.forEach((s, index) => {
+                ctx.save();
+                ctx.globalAlpha = s.alpha;
+                ctx.fillStyle = s.color;
+                ctx.beginPath();
+                ctx.arc(s.x, s.y, s.size, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.restore();
+
+                s.x += s.vx;
+                s.y += s.vy;
+                s.vy += 0.12; // gravedad
+                s.alpha -= s.decay;
+
+                if (s.alpha <= 0) sparkles.splice(index, 1);
+            });
+
+            requestAnimationFrame(animateCanvas);
+        }
+        animateCanvas();
+
+        // --- 2. MELODÍA NAVIDEÑA CON WEB AUDIO API (SIN ARCHIVOS EXTERNOS) ---
+        let audioCtx = null;
+        let isPlaying = false;
+        let melodyInterval = null;
+
+        // Notas de "We Wish You a Merry Christmas"
+        const notes = [
+            { f: 261.63, d: 0.35 }, { f: 349.23, d: 0.35 }, { f: 349.23, d: 0.18 }, { f: 392.00, d: 0.18 },
+            { f: 349.23, d: 0.18 }, { f: 329.63, d: 0.18 }, { f: 293.66, d: 0.35 }, { f: 293.66, d: 0.35 },
+            { f: 293.66, d: 0.35 }, { f: 392.00, d: 0.35 }, { f: 392.00, d: 0.18 }, { f: 440.00, d: 0.18 },
+            { f: 392.00, d: 0.18 }, { f: 349.23, d: 0.18 }, { f: 329.63, d: 0.35 }, { f: 261.63, d: 0.35 },
+            { f: 261.63, d: 0.35 }, { f: 440.00, d: 0.35 }, { f: 440.00, d: 0.18 }, { f: 493.88, d: 0.18 },
+            { f: 440.00, d: 0.18 }, { f: 392.00, d: 0.18 }, { f: 349.23, d: 0.35 }, { f: 293.66, d: 0.35 },
+            { f: 261.63, d: 0.18 }, { f: 261.63, d: 0.18 }, { f: 293.66, d: 0.35 }, { f: 392.00, d: 0.35 },
+            { f: 329.63, d: 0.35 }, { f: 349.23, d: 0.70 }
+        ];
+
+        function playChristmasChime() {
+            if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+
+            isPlaying = true;
+            document.getElementById('musicBtn').textContent = '🔊';
+            let time = audioCtx.currentTime + 0.1;
+
+            notes.forEach(note => {
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(note.f, time);
+
+                gain.gain.setValueAtTime(0.001, time);
+                gain.gain.exponentialRampToValueAtTime(0.09, time + 0.04);
+                gain.gain.exponentialRampToValueAtTime(0.0001, time + note.d);
+
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start(time);
+                osc.stop(time + note.d + 0.05);
+
+                time += note.d * 1.08;
+            });
+        }
+
+        document.getElementById('musicBtn').addEventListener('click', () => {
+            if (audioCtx && audioCtx.state === 'running') {
+                audioCtx.suspend();
+                document.getElementById('musicBtn').textContent = '🔇';
+            } else {
+                playChristmasChime();
+            }
+        });
+
+        // --- 3. APERTURA DEL SOBRE Y EFECTO 3D ---
+        function openCard() {
+            const envelope = document.getElementById('envelope');
+            const envelopeScreen = document.getElementById('envelope-screen');
+            const cardScreen = document.getElementById('card-screen');
+
+            envelope.classList.add('open');
+            playChristmasChime();
+
+            setTimeout(() => {
+                envelopeScreen.style.opacity = '0';
+                envelopeScreen.style.transform = 'scale(1.1)';
+                
+                setTimeout(() => {
+                    envelopeScreen.style.display = 'none';
+                    cardScreen.style.display = 'flex';
+                    document.getElementById('musicBtn').style.display = 'flex';
+                    
+                    requestAnimationFrame(() => {
+                        cardScreen.classList.add('visible');
+                        burstSparkles();
+                    });
+                }, 500);
+            }, 450);
+        }
+
+        // Inclinación 3D al mover mouse o dedo sobre la tarjeta
+        const card3d = document.getElementById('card3d');
+        card3d.addEventListener('mousemove', (e) => {
+            const rect = card3d.getBoundingClientRect();
+            const x = (e.clientX - rect.left) / rect.width - 0.5;
+            const y = (e.clientY - rect.top) / rect.height - 0.5;
+            card3d.style.transform = `rotateY(${x * 10}deg) rotateX(${-y * 10}deg)`;
+        });
+
+        card3d.addEventListener('mouseleave', () => {
+            card3d.style.transform = 'rotateY(0deg) rotateX(0deg)';
+        });
+    </script>
 </body>
 </html>
